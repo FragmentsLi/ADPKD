@@ -3,7 +3,9 @@ library(Seurat)
 library(SingleR)
 library(celldex)
 
-# Annotation
+####################################################################
+#   1. Annotation
+####################################################################
 Idents(adpkd_qc) <- 'RNA_snn_res.0.7'
 type<-c('PT','Tcell','MNP','MNP','Tcell',#0,1,2,3,4
         'FIB','Bcell','Tcell','PT','FIB',#5,6,7,8,9
@@ -151,4 +153,13 @@ wilcox.test(cellprop[1:7,'Tcell'],cellprop[8:10,'Tcell'])
 wilcox.test(cellprop[1:7,'FIB'],cellprop[8:10,'FIB'])
 wilcox.test(cellprop[1:7,'PT'],cellprop[8:10,'PT'])
 
+####################################################################
+#   2. Saving
+####################################################################
+# MNPs
+save(subset(adpkd_qc,idents = c("MNP")),file='MNP.RData')
+# T cells
+save(subset(adpkd_qc,idents = c("Tcell")),file='Tcell.RData')
+# Fibroblast
+save(subset(adpkd_qc,idents = c("FIB")),file='fibroblast.RData')
 
