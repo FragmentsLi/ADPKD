@@ -74,8 +74,8 @@ library(fplot)
 adpkd_qc@meta.data$orig.ident2<-unlist(lapply(as.character(adpkd_qc@meta.data$orig.ident),function(x){
   return(paste0('Sample ',which(names(table(adpkd_qc@meta.data$orig.ident))==x)))}))
 adpkd_qc@meta.data$orig.ident2<-ordered(adpkd_qc@meta.data$orig.ident2,
-                          levels=c("Sample 1","Sample 2","Sample 3","Sample 4","Sample 5",
-                                   "Sample 6","Sample 7","Sample 8","Sample 9","Sample 10"))
+                          levels=c("A_S1","A_S2","A_S3","A_S4","A_S5",
+                                   "A_S6","A_S7","N_S1","N_S2","N_S3"))
 
 p<-DimPlot(adpkd_qc, reduction = 'umap',group.by = 'celltype',
         label = FALSE, label.size = 8,pt.size = 0.01) + scale_color_npg()+ labs(title=paste('Cell Types')) +
@@ -88,5 +88,67 @@ png(filename = "ADPKD_all_UMAP_0.7_type.png",width = 120, height = 90,
     units = "mm", res = 300)
 p
 dev.off()
+
+# Creating Figure 1D
+library(ggsci)
+library(reshape2)
+library(dplyr)
+library(aplot)
+cell_composition<-table(adpkd_qc$celltype,adpkd_qc$orig.ident2)
+cell_composition<-apply(cell_composition,2,function(x){
+  return(x/sum(x))})
+cell_composition<-melt(cell_composition,id=rownames(cell_composition))
+colnames(cell_composition)<-c('Types','Sample','Cell')
+cell_composition$Sample<-factor(cell_composition$Sample,levels=c('N_S3','N_S2','N_S1','A_S7','A_S6','A_S5','A_S4','A_S3','A_S2','A_S1'))
+cell_composition$Groups<-as.factor(unlist(lapply(cell_composition$Sample,function(x){
+  if(x %in% c('N_S3','N_S2','N_S1')){return('Normal')}
+  else{return('ADPKD')}})))
+cell_composition$loc<-rep(1,dim(cell_composition)[1])
+
+
+p<-ggplot(cell_composition,aes(x=Sample,y=Cell,fill=Types))+
+coord_flip()+guides(fill = F)+
+geom_bar(stat="identity", position="stack", width =0.8 ,aes(fill=Types))+
+labs(x = "",y = "Proportion of Cells",title=paste('Cell Types'))+theme_classic()+
+theme(axis.ticks.length=unit(0.1,'cm'))+
+guides(fill=F)+
+scale_fill_manual(values=	pal_npg()(9))+ #选柱子的颜色
+theme(plot.title=element_text(size=8,hjust=0.5,face='bold'),
+      legend.text=element_text(size=8),
+          legend.title=element_text(size=8)) + 
+theme(axis.title = element_text(size = 8,face='bold'),
+          axis.text.y=element_blank(),
+          axis.title.y=element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.text.x = element_text(size = 8,hjust=1,vjust=0.5,color = "black"), #angle这些是设置横坐标的角度和位置
+          axis.line = element_line(size = 0.5),
+          axis.ticks = element_line(size =0.5)) 
+
+p2<-ggplot(cell_composition,aes(x=loc,y=Sample))+
+geom_tile(aes(fill=Groups))+
+scale_x_continuous(expand = c(0,0))+
+  theme(panel.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y=element_text(size=8,color = "black"),
+        legend.position = "none")+
+  scale_fill_manual(values = c('#f47720','#459943'))
+
+
+png(filename = "ADPKD_all_cellprop.png",width = 85, height = 65, 
+    units = "mm", res = 300)
+p%>%
+  insert_left(p2,width = 0.1)
+
+dev.off()
+
+# Wilcox.test
+library(dplyr)
+cellprop<-table(adpkd_qc$orig.ident,adpkd_qc$celltype)/rowSums(table(adpkd_qc$orig.ident,adpkd_qc$celltype))
+wilcox.test(cellprop[1:7,'Tcell'],cellprop[8:10,'MNP'])
+wilcox.test(cellprop[1:7,'Tcell'],cellprop[8:10,'Tcell'])
+wilcox.test(cellprop[1:7,'FIB'],cellprop[8:10,'FIB'])
+wilcox.test(cellprop[1:7,'PT'],cellprop[8:10,'PT'])
 
 
