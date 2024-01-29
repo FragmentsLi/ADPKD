@@ -16,8 +16,8 @@ names(type) <- levels(adpkd_qc)
 adpkd_qc <- RenameIdents(adpkd_qc, type)       #修改Idents
 adpkd_qc$celltype <- Idents(adpkd_qc)
 
-#   Fig:所有细胞类型的dotplot
-#提取DotPlot数据
+# Cell markers
+# Creating Figure 1C
 data.usage<-DotPlot(adpkd_qc,feature=c('CD3D','CD3E','TRAC',#T Cells
                            'CD79A','MS4A1','CD19',#B Cells
                            'LYZ','CD14','CD68',#MNP
@@ -30,19 +30,16 @@ data.usage<-DotPlot(adpkd_qc,feature=c('CD3D','CD3E','TRAC',#T Cells
                           )#Distal tubule Cells
         ,group.by='celltype')$data
 
-#创建X轴细胞类型标签
 data.anno<-data.frame(features.plot=unique(data.usage$features.plot),
                       label=c(rep('TCell',3),rep('BCell',3),
                              rep('MNP',3),rep('MAST',2),
                              rep('FIB',5),rep('EPI',4),rep('ENDO',2),
                              rep('PT',3),rep('DT',2)))
-#将注释添加到data.usage方便调用
+
 df.plot<-plyr::join(data.usage,data.anno)
 
-#根据需求重排Y轴标签顺序
-df.plot$id<-factor(df.plot$id,levels=sort(levels(df.plot$id)))
+f.plot$id<-factor(df.plot$id,levels=sort(levels(df.plot$id)))
 
-#重绘气泡图并基于facet分面方法添加X轴注释标签
 p<-ggplot(df.plot,aes(x=features.plot,y=id,size=pct.exp,color=avg.exp.scaled))+
 geom_point()+scale_size("Percent Expressed",range=c(0,5))+
 scale_color_gradientn(colours=viridis::viridis(20),
@@ -68,3 +65,28 @@ png(filename = "ADPKD_all_features.png",width = 210, height = 70,
     units = "mm", res = 300)
 p
 dev.off()
+
+# Creating Figure 1B
+library(Seurat)
+library(ggsci)
+library(ggplot2)
+library(fplot)
+adpkd_qc@meta.data$orig.ident2<-unlist(lapply(as.character(adpkd_qc@meta.data$orig.ident),function(x){
+  return(paste0('Sample ',which(names(table(adpkd_qc@meta.data$orig.ident))==x)))}))
+adpkd_qc@meta.data$orig.ident2<-ordered(adpkd_qc@meta.data$orig.ident2,
+                          levels=c("Sample 1","Sample 2","Sample 3","Sample 4","Sample 5",
+                                   "Sample 6","Sample 7","Sample 8","Sample 9","Sample 10"))
+
+p<-DimPlot(adpkd_qc, reduction = 'umap',group.by = 'celltype',
+        label = FALSE, label.size = 8,pt.size = 0.01) + scale_color_npg()+ labs(title=paste('Cell Types')) +
+theme(axis.text=element_text(size=8),axis.title=element_text(size=8),
+     legend.title=element_text(size=8),legend.text=element_text(size=8),
+     plot.title=element_text(size=8))+
+theme(legend.position="right")
+
+png(filename = "ADPKD_all_UMAP_0.7_type.png",width = 120, height = 90, 
+    units = "mm", res = 300)
+p
+dev.off()
+
+
