@@ -65,7 +65,7 @@ adpkd_all@meta.data$orig.ident2<-ordered(adpkd_all@meta.data$orig.ident2,
 
 Idents(adpkd_all)<-'orig.ident2'
 
-#  Creating Supplymentary Fig. 1B
+#  Creating Supplementary Fig. 1B
 library(ggplot2)
 library(patchwork)
 library(dplyr)
@@ -155,7 +155,7 @@ adpkd_qc@meta.data$batch<-unlist(lapply(adpkd_qc@meta.data$orig.ident,function(x
   else
     return('Normal')}))
 
-# Creating Supplymentary Fig. 1C and D
+# Creating Supplementary Fig. 1C and D
 # Colored by group
 p<-DimPlot(adpkd_qc, reduction = 'umap',group.by = 'batch',cols=c('#f47720','#459943'),
            label = FALSE, label.size = 8,pt.size = 0.01)+ labs(title=paste('Groups'))+
