@@ -68,22 +68,16 @@ dev.off()
 #   2. Pathway Enrichment for MNPs
 ####################################################################
 load('MNP.RData')
-#!!!只取ADPKD，15059个细胞
 MNP=subset(x = MNP, subset = batch == "ADPKD")
 
-#hallmark
+# 1)VISION for hallmark(Supplementary Fig.4)
 vision.obj <- Vision(MNP,
               signatures = c("/data4/JN/PRJNA679848/VISION/msigdb_v2023.1.Hs_files_to_download_locally/msigdb_v2023.1.Hs_GMTs/h.all.v2023.1.Hs.symbols.gmt"),
               pool=F)
 options(mc.cores=5)
 vision.obj <- analyze(vision.obj)
-
-#KEGG
-vision.obj <- Vision(MNP,
-              signatures = c("/data4/JN/PRJNA679848/VISION/msigdb_v2023.1.Hs_files_to_download_locally/msigdb_v2023.1.Hs_GMTs/c2.cp.kegg.v2023.1.Hs.symbols.gmt"),
-              pool=F)
-options(mc.cores=5)
-vision.obj <- analyze(vision.obj)
+sigScores <- getSignatureScores(vision.obj)
+sigScores <- as.data.frame(sigScores)
 
 #GOBP
 vision.obj <- Vision(MNP,
@@ -92,46 +86,29 @@ vision.obj <- Vision(MNP,
 options(mc.cores=10)
 vision.obj <- analyze(vision.obj)
 
+#   Fig:hallmark结果热图
+p <- pheatmap::pheatmap(sigScores,scale = "row",cluster_cols = F,
+                        fontsize=8,
+                        border_color = "grey",
+                        cellwidth = 12, 
+                        cellheight = 12,
+                        annotation_colors=ann_colors,angle_col=90)
+
+png(filename = "ADPKD_MNP_VISION_hallmark_all.png",width = 200, height = 290, 
+    units = "mm", res = 300)
+p
+dev.off()
 
 
-#获得每个细胞的不同Gene Set打分
-sigScores <- getSignatureScores(vision.obj)
-sigScores <- as.data.frame(sigScores)
 
-#VISION得出的score取平均值
+# 2)Mean value
 group.by <- "subtype" 
-#mat <- as.data.frame(t(as.matrix(GetAssayData(object, assay = "RNA", slot = "data")))) 
 sigScores <- expm1(x = sigScores) 
 sigScores <- aggregate(sigScores, by=list(MNP@meta.data[[group.by]]), FUN="mean") 
 rownames(sigScores) <- sigScores$Group.1 
 sigScores <- t(sigScores[,-1]) 
 head(sigScores)
 
-#FIBROBLAST
-sigScores2<-sigScores[rownames(sigScores)[grepl('FIBRO',rownames(sigScores))],]
-
-#INTEGRIN
-sigScores2<-sigScores[rownames(sigScores)[grepl('INTEGRIN',rownames(sigScores))],]
-
-#PROLIFERATION
-sigScores2<-sigScores[rownames(sigScores)[grepl('PROLIFERATION',rownames(sigScores))],]
-
-#INFLAMMATION
-sigScores2<-sigScores[rownames(sigScores)[grepl('INFLAMMA',rownames(sigScores))],]
-
-#MIGRATION
-sigScores2<-sigScores[rownames(sigScores)[grepl('MIGRATION',rownames(sigScores))],]
-
-#ROS
-sigScores2<-sigScores[rownames(sigScores)[grepl('OXIDATIVE',rownames(sigScores))],]
-
-#DIFF
-sigScores2<-sigScores[rownames(sigScores)[grepl('DIFFERENT',rownames(sigScores))],]
-
-#DIFF
-sigScores2<-sigScores[rownames(sigScores)[grepl('MACROPHAGE',rownames(sigScores))],]
-
-#Fig：最终画图
 final<-c('GOBP_REGULATION_OF_ACUTE_INFLAMMATORY_RESPONSE',
          'GOBP_POSITIVE_REGULATION_OF_ACUTE_INFLAMMATORY_RESPONSE',
          'GOBP_NATURAL_KILLER_CELL_DIFFERENTIATION',
@@ -182,17 +159,4 @@ p
 dev.off()
 
 #write.csv(sigScores,'VISION_heatmap_KEGG.csv',quote=F)
-
-#   Fig:hallmark结果热图
-p <- pheatmap::pheatmap(sigScores,scale = "row",cluster_cols = F,
-                        fontsize=8,
-                        border_color = "grey",
-                        cellwidth = 12, 
-                        cellheight = 12,
-                        annotation_colors=ann_colors,angle_col=90)
-
-png(filename = "ADPKD_MNP_VISION_hallmark_all.png",width = 200, height = 290, 
-    units = "mm", res = 300)
-p
-dev.off()
 
