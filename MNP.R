@@ -79,14 +79,14 @@ MNP=subset(x = MNP, subset = batch == "ADPKD")
 
 #hallmark
 vision.obj <- Vision(MNP,
-              signatures = c("/data4/JN/PRJNA679848/VISION/msigdb_v2023.1.Hs_files_to_download_locally/msigdb_v2023.1.Hs_GMTs/h.all.v2023.1.Hs.symbols.gmt"),
+              signatures = c(".../msigdb_v2023.1.Hs_files_to_download_locally/msigdb_v2023.1.Hs_GMTs/h.all.v2023.1.Hs.symbols.gmt"),
               pool=F)
 options(mc.cores=5)
 vision.obj <- analyze(vision.obj)
 
 #GOBP
 vision.obj <- Vision(MNP,
-              signatures = c("/data4/JN/PRJNA679848/VISION/msigdb_v2023.1.Hs_files_to_download_locally/msigdb_v2023.1.Hs_GMTs/c5.go.bp.v2023.1.Hs.symbols.gmt"),
+              signatures = c(".../msigdb_v2023.1.Hs_files_to_download_locally/msigdb_v2023.1.Hs_GMTs/c5.go.bp.v2023.1.Hs.symbols.gmt"),
               pool=F)
 options(mc.cores=10)
 vision.obj <- analyze(vision.obj)
