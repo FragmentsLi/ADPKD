@@ -153,13 +153,3 @@ wilcox.test(cellprop[1:7,'Tcell'],cellprop[8:10,'Tcell'])
 wilcox.test(cellprop[1:7,'FIB'],cellprop[8:10,'FIB'])
 wilcox.test(cellprop[1:7,'PT'],cellprop[8:10,'PT'])
 
-####################################################################
-#   2. Saving
-####################################################################
-# MNPs
-save(subset(adpkd_qc,idents = c("MNP")),file='MNP.RData')
-# T cells
-save(subset(adpkd_qc,idents = c("Tcell")),file='Tcell.RData')
-# Fibroblast
-save(subset(adpkd_qc,idents = c("FIB")),file='fibroblast.RData')
-
