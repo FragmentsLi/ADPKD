@@ -1,10 +1,9 @@
-library(CellChat)
-library(Seurat)
-load('adpkd_all.RData')
-
 ####################################################################
 #   1. CellChat for ADPKD
 ####################################################################
+library(CellChat)
+library(Seurat)
+load('adpkd_all.RData')
 
 # ADPKD sample
 adpkd_qc<-subset(x=adpkd_qc,batch=='ADPKD')
