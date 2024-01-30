@@ -93,6 +93,8 @@ cellchat <- mergeCellChat(object.list, add.names = names(object.list))
 
 cellchat_adpkd=0
 cellchat_normal=0
+
+# Creating Figure 1E
 png(filename = "ADPKD_CellChat_diff_heatmap.png",width = 100, height = 80, 
     units = "mm", res = 300)
 netVisual_heatmap(cellchat,comparison = c(2, 1), 
