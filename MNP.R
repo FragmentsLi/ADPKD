@@ -75,21 +75,11 @@ MNP@meta.data<-data.frame(MNP@meta.data,M1=M1_mean[rownames(MNP@meta.data)],M2=M
 #   5. Pathway enrichment
 ####################################################################
 library(VISION)
-load('MNP.RData')
-
-#!!!只取ADPKD，15059个细胞
 MNP=subset(x = MNP, subset = batch == "ADPKD")
 
 #hallmark
 vision.obj <- Vision(MNP,
               signatures = c("/data4/JN/PRJNA679848/VISION/msigdb_v2023.1.Hs_files_to_download_locally/msigdb_v2023.1.Hs_GMTs/h.all.v2023.1.Hs.symbols.gmt"),
-              pool=F)
-options(mc.cores=5)
-vision.obj <- analyze(vision.obj)
-
-#KEGG
-vision.obj <- Vision(MNP,
-              signatures = c("/data4/JN/PRJNA679848/VISION/msigdb_v2023.1.Hs_files_to_download_locally/msigdb_v2023.1.Hs_GMTs/c2.cp.kegg.v2023.1.Hs.symbols.gmt"),
               pool=F)
 options(mc.cores=5)
 vision.obj <- analyze(vision.obj)
@@ -101,19 +91,48 @@ vision.obj <- Vision(MNP,
 options(mc.cores=10)
 vision.obj <- analyze(vision.obj)
 
-
-
-#获得每个细胞的不同Gene Set打分
+#mean value
 sigScores <- getSignatureScores(vision.obj)
 sigScores <- as.data.frame(sigScores)
-
-#VISION得出的score取平均值
 group.by <- "subtype" 
-#mat <- as.data.frame(t(as.matrix(GetAssayData(object, assay = "RNA", slot = "data")))) 
 sigScores <- expm1(x = sigScores) 
 sigScores <- aggregate(sigScores, by=list(MNP@meta.data[[group.by]]), FUN="mean") 
 rownames(sigScores) <- sigScores$Group.1 
 sigScores <- t(sigScores[,-1]) 
 head(sigScores)
                              
+####################################################################
+#   6. Communication analysis
+####################################################################
+library(CellChat)
+MNP=subset(x = MNP, subset = batch == "ADPKD")
+data.input <- GetAssayData(MNP, assay = "RNA", slot = "data") # normalized data matrix
+labels <- Idents(MNP)
+#labels <- adpkd_qc@meta.data$subtype
+meta <- data.frame(group = labels, row.names = names(labels)) # create a dataframe of the cell labels
+
+#CellChat
+cellchat <- createCellChat(object = data.input)
+cellchat <- addMeta(cellchat, meta = meta, meta.name = "labels")
+cellchat <- setIdent(cellchat, ident.use = "labels") # set "labels" as default cell identity
+levels(cellchat@idents) # show factor levels of the cell labels
+groupSize <- as.numeric(table(cellchat@idents)) # number of cells in each cell group
+
+CellChatDB <- CellChatDB.human
+showDatabaseCategory(CellChatDB)
+
+CellChatDB.use <- CellChatDB # simply use the default CellChatDB
+cellchat@DB <- CellChatDB.use
+
+#Preprocessing
+cellchat <- subsetData(cellchat)
+cellchat <- identifyOverExpressedGenes(cellchat)
+cellchat <- identifyOverExpressedInteractions(cellchat)
+cellchat <- projectData(cellchat, PPI.human)
+
+cellchat <- computeCommunProb(cellchat,population.size=T,type = "truncatedMean",trim = 0.001)
+cellchat <- filterCommunication(cellchat, min.cells = 10)
+
+cellchat <- computeCommunProbPathway(cellchat)
+cellchat <- aggregateNet(cellchat)
                              
